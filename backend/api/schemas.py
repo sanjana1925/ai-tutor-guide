@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class IngestResponse(BaseModel):
@@ -15,6 +15,18 @@ class AgentRequest(BaseModel):
     mode: str = ""  # optional explicit override; empty => the Supervisor Agent decides
     reset_quiz: bool = False
     history: List[Dict[str, str]] = []  # recent {role, content} turns, for follow-up context
+
+    @field_validator("history", mode="before")
+    @classmethod
+    def keep_role_and_content(cls, value):
+        # Clients may send whole chat messages (e.g. with a "sources" list); only role and content are used.
+        if not isinstance(value, list):
+            return value
+        return [
+            {"role": str(item.get("role", "user")), "content": str(item.get("content", ""))}
+            for item in value
+            if isinstance(item, dict)
+        ]
 
 
 class AgentResponse(BaseModel):

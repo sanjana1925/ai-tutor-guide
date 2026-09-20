@@ -257,6 +257,11 @@ class DocumentAndLearnerEndpoints(unittest.TestCase):
             with mock.patch("backend.api.routes.learner.load_report", return_value=report):
                 self.assertEqual(self.client.get("/evaluation", headers=auth).json()["system_evaluation"]["num_questions"], 1)
 
+    def test_chat_history_from_the_browser_may_carry_extra_fields(self):
+        history = [{"role": "user", "content": "q"}, {"role": "assistant", "content": "a", "sources": ["chunk one", "chunk two"]}]
+        body = {"message": "hello", "filename": "notes.pdf", "session_id": "u9", "history": history}
+        self.assertNotEqual(self.client.post("/agent", json=body).status_code, 422)
+
     def test_evaluation_endpoint_needs_the_benchmark_password(self):
         with mock.patch.dict("os.environ", {"BENCHMARK_PASSWORD": "pw"}):
             self.assertEqual(self.client.get("/evaluation").status_code, 401)

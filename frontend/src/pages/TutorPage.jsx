@@ -45,7 +45,7 @@ export default function TutorPage() {
     e.preventDefault();
     const question = input.trim();
     if (!question || !currentDocument || busy) return;
-    const history = messages.slice(-6);
+    const history = messages.slice(-6).map(({ role, content }) => ({ role, content }));
     setInput("");
     addMessage(currentDocument, { role: "user", content: question });
     setBusy(true);

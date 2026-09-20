@@ -12,8 +12,8 @@ Related: [PRD](PRD.md) · [Architecture](Architecture.md) · [Rules](Rules.md) �
 | # | Task | Status | Notes |
 |---|---|---|---|
 | P0-1 | Rotate the LangSmith API key | ⬜ | It once sat in .env.example, a shareable file. Create a new key, put it only in .env, delete the old one |
-| P0-2 | Run the full-app audit at localhost:5173 | ⬜ | Cover upload, document switching and delete, chat and quick actions, follow-ups, unsupported and injection questions, quiz flow, dashboard, planner, evaluation, mobile, keyboard, console and network errors. Use a throwaway session and delete it afterwards. Report findings as Frontend, Working, and Backend |
-| P0-3 | Verify markdown rendering in the browser | ⬜ | Paste the sample summary with bold, bullets, and nested bullets and confirm no literal ** or * remains |
+| P0-2 | Finish the full-app audit | 🟡 | Non-AI parts done 2026-09-20 (see findings in F-8 to F-12 and S-7 to S-8). Still to run once the Gemini daily quota resets: real answers, follow-ups, off-topic and injection questions, quick actions, the quiz flow, and the pages with real quiz data |
+| P0-3 | Verify markdown rendering in the browser | ✅ | Bold, italic, nested and numbered lists render correctly, and raw HTML and javascript: links are not rendered |
 | P0-4 | Finish the clean LangSmith experiments | 🟡 | v2 baseline done (tutor-eval-v2-baseline_rag-ed255f28, 10 runs, 0 errors). v2 agentic was never created. Run: python evaluate.py --dataset data/golden_dataset_chem.json --session <session_id> --document chem.pdf --arm agentic --judge --langsmith-only --pause 10 --retries 3 --backoff 25 --prefix tutor-eval-v2 (about 25 minutes at 15 requests per minute) |
 | P0-5 | Add the LangSmith experiment results to 09-evaluation.md | ⬜ | Only use numbers from the clean v2 pair |
 
@@ -44,6 +44,11 @@ Related: [PRD](PRD.md) · [Architecture](Architecture.md) · [Rules](Rules.md) �
 | F-4 | Show a Refused badge for abstained benchmark rows | ⬜ | The cells are blank today |
 | F-5 | Show page numbers on source pills for new uploads | ⬜ | Chunk pages are in stored sources |
 | F-6 | Frontend tests (components and the quiz parser) | ⬜ | None yet |
+| F-8 | Set a different page title per route | ⬜ | Every route shows "AI Tutor Guide" |
+| F-9 | Study Planner with no quiz data shows an Initial Assessment card marked HIGH PRIORITY | ⬜ | Use a "Start here" label without a priority badge |
+| F-10 | Show elapsed time, a "taking longer" note, and a Retry button while the tutor is thinking | ⬜ | A failing request can leave "Thinking..." for about 30 seconds |
+| F-11 | Let learners open a source pill to read the excerpt | ⬜ | Pills only say Source 1, Source 2 |
+| F-12 | Round benchmark values (Avg Latency shows 10.115) and enlarge the mobile Close navigation button | ⬜ | |
 | F-7 | Evaluation trend view (accuracy over time, answers with explanations) | ⬜ | Needs the per-answer history exposed by the backend |
 
 ---
@@ -57,6 +62,8 @@ Related: [PRD](PRD.md) · [Architecture](Architecture.md) · [Rules](Rules.md) �
 | S-3 | CORS origins from the environment | ⬜ | Hard-coded localhost:5173 today |
 | S-4 | Postgres option for chat and learner data, plus a deployment guide | ⬜ | Chroma files and SQLite are single-node |
 | S-5 | Clean up old LangSmith experiments from aborted runs | ⬜ | tutor-eval-*-729dd1ac, -0142f1ec, -c4b4cc46, -87896683, -20673c2b contain errored or partial runs |
+| S-7 | Fail fast on the Gemini per-day quota error | ⬜ | A per-day 429 is retried for about 32 seconds before failing. Detect GenerateRequestsPerDay and return "daily free limit reached, try tomorrow" immediately |
+| S-8 | Delete the leftover fixtest/_smoke2.pdf chunk in data/chroma_db | ⬜ | Left by an early smoke test |
 | S-6 | Health and readiness endpoint reporting model and database status | ⬜ | |
 
 ---
@@ -109,7 +116,8 @@ Observability and evaluation
 Quality, docs, hygiene
 
 * ✅ Folder tidy-up: runtime data in data/, quiz and plan rules in backend/domain/, project documents in project-docs/, run scripts in scripts/, root guardrails.py shim removed
-* ✅ 213 offline tests
+* ✅ Fixed: follow-up chat questions failed with a 422 error after any reply that had sources (frontend now sends only role and content, backend ignores extra fields, errors show readable text)
+* ✅ 214 offline tests
 * ✅ Plain-language docs (docs/01 to 12), README, and this document set, all rewritten in a plain readable format
 * ✅ .env.example restored to placeholders, key moved to .env, .gitignore extended
 * ✅ Cleanup of leftovers (old chat JSONs, stray logs, old sample project, old docx, old golden set)

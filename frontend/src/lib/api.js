@@ -5,12 +5,20 @@ function authHeaders(extra = {}) {
   return API_KEY ? { "X-API-Key": API_KEY, ...extra } : extra;
 }
 
+// FastAPI returns `detail` as a string, or as a list of validation problems.
+function formatDetail(detail) {
+  if (Array.isArray(detail)) {
+    return detail.map((d) => (d && d.msg ? `${(d.loc || []).slice(1).join(".")}: ${d.msg}` : String(d))).join("; ");
+  }
+  return typeof detail === "string" ? detail : detail ? JSON.stringify(detail) : "";
+}
+
 async function asJson(res) {
   if (!res.ok) {
     let detail = res.statusText;
     try {
       const body = await res.json();
-      detail = body.detail || detail;
+      detail = formatDetail(body.detail) || detail;
     } catch {
       /* non-json error body */
     }
