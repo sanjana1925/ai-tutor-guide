@@ -40,6 +40,10 @@ export function AppProvider({ children }) {
     });
   }, []);
 
+  const removeLastMessage = useCallback((filename) => {
+    setDocuments((prev) => ({ ...prev, [filename]: (prev[filename] || []).slice(0, -1) }));
+  }, []);
+
   const setMessages = useCallback((filename, messages) => {
     setDocuments((prev) => ({ ...prev, [filename]: messages }));
   }, []);
@@ -90,6 +94,7 @@ export function AppProvider({ children }) {
       currentDocument,
       setCurrentDocument,
       addMessage,
+      removeLastMessage,
       setMessages,
       upload,
       uploading,
@@ -97,7 +102,7 @@ export function AppProvider({ children }) {
       removeCurrentDocument,
       documentNames: Object.keys(documents),
     }),
-    [sessionId, documents, currentDocument, addMessage, setMessages, upload, uploading, uploadError, removeCurrentDocument]
+    [sessionId, documents, currentDocument, addMessage, removeLastMessage, setMessages, upload, uploading, uploadError, removeCurrentDocument]
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

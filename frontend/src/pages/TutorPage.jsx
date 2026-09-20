@@ -6,7 +6,7 @@ import ChatBubble from "../components/ChatBubble";
 import { Pill } from "../components/Button";
 import EmptyState from "../components/EmptyState";
 import { useApp } from "../store";
-import { sendAgentMessage } from "../lib/api";
+import { fetchChatHistory, sendAgentMessage } from "../lib/api";
 
 const QUICK_ACTIONS = [
   { mode: "summary", label: "Summarize", icon: FileText },
@@ -15,48 +15,101 @@ const QUICK_ACTIONS = [
   { mode: "glossary", label: "Glossary", icon: BookOpen },
 ];
 
+const SLOW_AFTER_SECONDS = 15;
+
+function useElapsedSeconds(active) {
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    if (!active) {
+      setSeconds(0);
+      return undefined;
+    }
+    const started = Date.now();
+    const id = setInterval(() => setSeconds(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, [active]);
+  return seconds;
+}
+
 export default function TutorPage() {
-  const { currentDocument, sessionId, documents, addMessage } = useApp();
+  const { currentDocument, sessionId, documents, addMessage, removeLastMessage, setMessages } = useApp();
   const navigate = useNavigate();
   const messages = currentDocument ? documents[currentDocument] || [] : [];
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [lastRequest, setLastRequest] = useState(null);
   const scrollRef = useRef(null);
+  const elapsed = useElapsedSeconds(busy);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, busy]);
 
-  async function runMode(mode, label) {
+  // The server keeps the full conversation: when a document is opened, show that copy.
+  useEffect(() => {
+    if (!currentDocument) return undefined;
+    let cancelled = false;
+    fetchChatHistory(currentDocument, sessionId)
+      .then((data) => {
+        if (cancelled || !data.messages || data.messages.length === 0) return;
+        setMessages(
+          currentDocument,
+          data.messages
+            .filter((m) => m.role === "user" || m.role === "assistant")
+            .map((m) => {
+              const excerpts = (m.sources || []).flatMap((s) => s.excerpts || []);
+              return { role: m.role, content: m.content, ...(excerpts.length ? { sources: excerpts } : {}) };
+            })
+        );
+      })
+      .catch(() => {
+        /* offline or first visit: keep the copy saved in this browser */
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDocument, sessionId]);
+
+  async function send(request, { addUser = true } = {}) {
     if (!currentDocument || busy) return;
+    const history = messages.slice(-6).map(({ role, content }) => ({ role, content }));
+    setLastRequest(request);
+    if (addUser) addMessage(currentDocument, { role: "user", content: request.display });
     setBusy(true);
-    addMessage(currentDocument, { role: "user", content: `${label} — ${currentDocument}` });
     try {
-      const resp = await sendAgentMessage({ message: label, filename: currentDocument, sessionId, mode });
-      addMessage(currentDocument, { role: "assistant", content: resp.reply });
+      const resp = await sendAgentMessage({
+        message: request.message,
+        filename: currentDocument,
+        sessionId,
+        mode: request.mode || "",
+        history: request.mode ? [] : history,
+      });
+      addMessage(currentDocument, { role: "assistant", content: resp.reply, sources: resp.retrieved_chunks });
+      setLastRequest(null);
     } catch (err) {
-      addMessage(currentDocument, { role: "assistant", content: `Error: ${err.message}` });
+      addMessage(currentDocument, { role: "assistant", content: `Error: ${err.message}`, isError: true });
     } finally {
       setBusy(false);
     }
   }
 
-  async function handleSend(e) {
+  function runMode(mode, label) {
+    send({ message: label, mode, display: `${label} — ${currentDocument}` });
+  }
+
+  function handleSend(e) {
     e.preventDefault();
     const question = input.trim();
     if (!question || !currentDocument || busy) return;
-    const history = messages.slice(-6).map(({ role, content }) => ({ role, content }));
     setInput("");
-    addMessage(currentDocument, { role: "user", content: question });
-    setBusy(true);
-    try {
-      const resp = await sendAgentMessage({ message: question, filename: currentDocument, sessionId, history });
-      addMessage(currentDocument, { role: "assistant", content: resp.reply, sources: resp.retrieved_chunks });
-    } catch (err) {
-      addMessage(currentDocument, { role: "assistant", content: `Error: ${err.message}` });
-    } finally {
-      setBusy(false);
-    }
+    send({ message: question, display: question });
+  }
+
+  function retry() {
+    if (!lastRequest || busy) return;
+    removeLastMessage(currentDocument);
+    send(lastRequest, { addUser: false });
   }
 
   return (
@@ -98,9 +151,27 @@ export default function TutorPage() {
                 }
               />
             ) : (
-              messages.map((msg, i) => <ChatBubble key={i} role={msg.role} content={msg.content} sources={msg.sources} />)
+              messages.map((msg, i) => (
+                <ChatBubble
+                  key={i}
+                  role={msg.role}
+                  content={msg.content}
+                  sources={msg.sources}
+                  isError={msg.isError}
+                  onRetry={msg.isError && i === messages.length - 1 && !busy ? retry : undefined}
+                />
+              ))
             )}
-            {busy && <ChatBubble role="assistant" content="Thinking…" />}
+            {busy && (
+              <ChatBubble
+                role="assistant"
+                content={
+                  elapsed >= SLOW_AFTER_SECONDS
+                    ? `Still working (${elapsed}s). This is taking longer than usual, and the AI service may be busy. You can keep waiting, or try again in a moment.`
+                    : "Thinking…"
+                }
+              />
+            )}
             <div ref={scrollRef} />
           </div>
 

@@ -38,17 +38,17 @@ Related: [PRD](PRD.md) · [Architecture](Architecture.md) · [Rules](Rules.md) �
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| F-1 | Restore chat from GET /chat/history on load | ⬜ | The UI keeps its own localStorage cache today |
+| F-1 | Restore chat from GET /chat/history on load | ✅ | The UI keeps its own localStorage cache today |
 | F-2 | Show the agent trace (decisions, tool calls, budget) in a collapsible panel | ⬜ | agent_trace is already returned by /agent |
 | F-3 | Benchmark: show baseline vs agentic comparison and "Not evaluated yet" | ⬜ | /evaluation already returns arms and comparison |
-| F-4 | Show a Refused badge for abstained benchmark rows | ⬜ | The cells are blank today |
+| F-4 | Show a Refused badge for abstained benchmark rows | ✅ | Done |
 | F-5 | Show page numbers on source pills for new uploads | ⬜ | Chunk pages are in stored sources |
 | F-6 | Frontend tests (components and the quiz parser) | ⬜ | None yet |
-| F-8 | Set a different page title per route | ⬜ | Every route shows "AI Tutor Guide" |
-| F-9 | Study Planner with no quiz data shows an Initial Assessment card marked HIGH PRIORITY | ⬜ | Use a "Start here" label without a priority badge |
-| F-10 | Show elapsed time, a "taking longer" note, and a Retry button while the tutor is thinking | ⬜ | A failing request can leave "Thinking..." for about 30 seconds |
-| F-11 | Let learners open a source pill to read the excerpt | ⬜ | Pills only say Source 1, Source 2 |
-| F-12 | Round benchmark values (Avg Latency shows 10.115) and enlarge the mobile Close navigation button | ⬜ | |
+| F-8 | Set a different page title per route | ✅ | Every route shows "AI Tutor Guide" |
+| F-9 | Study Planner with no quiz data shows an Initial Assessment card marked HIGH PRIORITY | ✅ | Use a "Start here" label without a priority badge |
+| F-10 | Show elapsed time, a "taking longer" note, and a Retry button while the tutor is thinking | ✅ | A failing request can leave "Thinking..." for about 30 seconds |
+| F-11 | Let learners open a source pill to read the excerpt | ✅ | Pills only say Source 1, Source 2 |
+| F-12 | Round benchmark values (Avg Latency shows 10.115) and enlarge the mobile Close navigation button | ✅ | |
 | F-7 | Evaluation trend view (accuracy over time, answers with explanations) | ⬜ | Needs the per-answer history exposed by the backend |
 
 ---
@@ -116,6 +116,8 @@ Observability and evaluation
 Quality, docs, hygiene
 
 * ✅ Folder tidy-up: runtime data in data/, quiz and plan rules in backend/domain/, project documents in project-docs/, run scripts in scripts/, root guardrails.py shim removed
+* ✅ Chat page: restores from the server history, shows a "taking longer" note after 15 s, has a Retry button and a 100 s timeout, and source pills open the excerpt (server history now includes excerpt text)
+* ✅ Page titles per route, Study Planner "Start here" label, benchmark "Refused" badge and rounded latency
 * ✅ Fixed: follow-up chat questions failed with a 422 error after any reply that had sources (frontend now sends only role and content, backend ignores extra fields, errors show readable text)
 * ✅ 214 offline tests
 * ✅ Plain-language docs (docs/01 to 12), README, and this document set, all rewritten in a plain readable format

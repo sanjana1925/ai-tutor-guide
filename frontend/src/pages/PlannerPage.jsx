@@ -64,14 +64,22 @@ export default function PlannerPage() {
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <h3 className="font-heading text-lg font-extrabold">{item.topic}</h3>
-                    <span
-                      className={`px-3 py-1 rounded-pill border-2 text-xs font-bold uppercase ${
-                        PRIORITY_STYLES[item.priority] || PRIORITY_STYLES.Medium
-                      }`}
-                    >
-                      {item.priority} priority
-                    </span>
-                    <span className="text-xs text-muted-fg font-semibold">Accuracy: {item.accuracy}</span>
+                    {plan.total_attempted === 0 ? (
+                      <span className="px-3 py-1 rounded-pill border-2 border-violet bg-violet/10 text-violet text-xs font-bold uppercase">
+                        Start here
+                      </span>
+                    ) : (
+                      <>
+                        <span
+                          className={`px-3 py-1 rounded-pill border-2 text-xs font-bold uppercase ${
+                            PRIORITY_STYLES[item.priority] || PRIORITY_STYLES.Medium
+                          }`}
+                        >
+                          {item.priority} priority
+                        </span>
+                        <span className="text-xs text-muted-fg font-semibold">Accuracy: {item.accuracy}</span>
+                      </>
+                    )}
                   </div>
                   <p className="text-fg mb-1">{item.recommendation}</p>
                   <p className="text-sm text-muted-fg italic mb-3">{item.reason}</p>

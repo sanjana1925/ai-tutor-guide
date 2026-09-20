@@ -99,7 +99,7 @@ brand + 5 nav      |   Main content, max width 1200 px
 | MetricCard | Icon in a coloured circle, label, large number, supporting text |
 | ProgressBar | Chunky bar with role progressbar and aria values |
 | SectionHeader | Optional title with a squiggle, and a subtitle. Eyebrow labels were removed |
-| ChatBubble | User: violet, white text, plain text. Assistant: white with a dark border and a bot icon, renders markdown. Source pills read Source 1, Source 2 |
+| ChatBubble | User: violet, white text, plain text. Assistant: white with a dark border and a bot icon, renders markdown. Source pills read Source 1, Source 2 and open to show the excerpt. A failed reply gets a pink border and a Retry button. While waiting, a "Thinking..." bubble turns into a "taking longer than usual" note after 15 seconds |
 | Markdown | Renders the tutor's markdown with react-markdown and remark-gfm: bold, italic, bullet and numbered lists including nested ones, headings, tables, code. Raw HTML is never rendered. Used by chat replies and the study plan summary |
 | EmptyState | Icon tile, title, body, optional actions, decorative shapes |
 | UploadDropzone, DocumentPanel | Dashed drop area and a modal to upload, switch, and delete documents |
@@ -136,7 +136,7 @@ DELIBERATE DEVIATIONS FROM THE ORIGINAL SPEC (data honesty)
 * Study Time was replaced by Questions Correct and Topics Mastered because the API has no study-time data.
 * The evaluation Quiz metric group was omitted because no quiz-evaluation data exists.
 * Per-difficulty question counts are not shown because /dashboard returns only accuracies.
-* Source pills read Source N because chat sources carry chunk ids, not page numbers.
+* Source pills read Source N because chat sources carry chunk ids, not page numbers. Each pill opens the excerpt text.
 
 ---
 
@@ -167,7 +167,7 @@ DELIBERATE DEVIATIONS FROM THE ORIGINAL SPEC (data honesty)
 * The session id is in localStorage["tg_session_id"]. Per-session state (documents, chat cache, current document) is in localStorage["tg_state_<session>"].
 * POST /agent handles chat, quick actions (mode), and the quiz. The quiz page parses the markdown reply (lib/parseQuiz.js) for feedback and the question number. The question itself comes from quiz_details.question_dict.
 * GET /dashboard and GET /planner feed their pages. GET /evaluation is called only after the password is entered, with an X-Benchmark-Password header.
-* agent_trace and GET /chat/history are available but not yet used by the UI (see Tasks.md).
+* GET /chat/history is used to restore the conversation when a document is opened (with source excerpts). agent_trace is available but not yet used by the UI (see Tasks.md).
 
 ---
 

@@ -47,10 +47,15 @@ export async function deleteDocument(filename, sessionId) {
   return asJson(res);
 }
 
+const AGENT_TIMEOUT_MS = 100000;
+
 export async function sendAgentMessage({ message, filename, sessionId, mode = "", history = [], resetQuiz = false }) {
-  const res = await fetch(`${API_URL}/agent`, {
+  let res;
+  try {
+    res = await fetch(`${API_URL}/agent`, {
     method: "POST",
     headers: authHeaders({ "Content-Type": "application/json" }),
+    signal: AbortSignal.timeout(AGENT_TIMEOUT_MS),
     body: JSON.stringify({
       message,
       filename,
@@ -59,7 +64,21 @@ export async function sendAgentMessage({ message, filename, sessionId, mode = ""
       history,
       reset_quiz: resetQuiz,
     }),
-  });
+    });
+  } catch (err) {
+    if (err && (err.name === "TimeoutError" || err.name === "AbortError")) {
+      throw new Error("The tutor took too long to answer. Please try again.");
+    }
+    throw new Error("Could not reach the tutor. Check that the backend is running.");
+  }
+  return asJson(res);
+}
+
+export async function fetchChatHistory(filename, sessionId) {
+  const res = await fetch(
+    `${API_URL}/chat/history?session_id=${encodeURIComponent(sessionId)}&filename=${encodeURIComponent(filename)}`,
+    { headers: authHeaders() }
+  );
   return asJson(res);
 }
 

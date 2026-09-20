@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import TopHeader from "./TopHeader";
 import DocumentPanel from "./DocumentPanel";
@@ -6,6 +6,10 @@ import DocumentPanel from "./DocumentPanel";
 export default function Shell({ title, children }) {
   const [navOpen, setNavOpen] = useState(false);
   const [docPanelOpen, setDocPanelOpen] = useState(false);
+
+  useEffect(() => {
+    document.title = title ? `${title} · AI Tutor Guide` : "AI Tutor Guide";
+  }, [title]);
 
   return (
     <div className="min-h-screen flex bg-bg dot-grid">

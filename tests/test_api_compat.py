@@ -147,7 +147,10 @@ class ChatMemoryWiring(unittest.TestCase):
         self.ask()
         history = self.client.get("/chat/history", params=S).json()
         self.assertEqual([m["role"] for m in history["messages"]], ["user", "assistant"])
-        self.assertEqual(history["messages"][1]["sources"], [{"source_document": "chem.pdf", "chunk_ids": [0]}])
+        source = history["messages"][1]["sources"][0]
+        self.assertEqual((source["source_document"], source["chunk_ids"]), ("chem.pdf", [0]))
+        self.assertEqual(len(source["excerpts"]), 1)
+        self.assertTrue(source["excerpts"][0])
         self.assertEqual(history["title"], "what is mass conservation")
 
     def test_previous_turns_are_loaded_into_the_next_request(self):

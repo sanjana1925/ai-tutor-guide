@@ -227,7 +227,7 @@ export default function EvaluationPage() {
                   icon={Gauge}
                   title="System"
                   metrics={[
-                    ["Avg Latency (s)", sys.avg_latency_seconds],
+                    ["Avg Latency (s)", sys.avg_latency_seconds == null ? null : Number(sys.avg_latency_seconds).toFixed(1)],
                     ["Questions Evaluated", sys.num_questions],
                   ]}
                 />
@@ -258,9 +258,19 @@ export default function EvaluationPage() {
                             <td className="px-4 py-3">{r.topic}</td>
                             <td className="px-4 py-3">{r.difficulty}</td>
                             <td className="px-4 py-3">{r.retrieval_recall_at_k}</td>
-                            <td className="px-4 py-3">{r.answer_similarity}</td>
-                            <td className="px-4 py-3">{r.groundedness_score}</td>
-                            <td className="px-4 py-3">{r.latency_seconds}</td>
+                            {r.abstained ? (
+                              <td className="px-4 py-3" colSpan={2}>
+                                <span className="px-2.5 py-1 rounded-pill border-2 border-pink bg-pink/10 text-pink text-xs font-bold uppercase">
+                                  Refused
+                                </span>
+                              </td>
+                            ) : (
+                              <>
+                                <td className="px-4 py-3">{r.answer_similarity}</td>
+                                <td className="px-4 py-3">{r.groundedness_score}</td>
+                              </>
+                            )}
+                            <td className="px-4 py-3">{r.latency_seconds == null ? "" : Number(r.latency_seconds).toFixed(1)}</td>
                           </tr>
                         ))}
                       </tbody>
