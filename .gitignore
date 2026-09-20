@@ -1,0 +1,24 @@
+# secrets
+.env
+
+# environments and dependencies
+.venv/
+frontend/node_modules/
+
+# build output and caches
+frontend/dist/
+__pycache__/
+*.pyc
+
+# local data (documents, chat database, quiz progress, evaluation report)
+data/
+
+# documentation (docs/ is kept out of GitHub; project-docs/ is committed)
+docs/
+
+# editor, OS and tool files
+.vscode/
+.idea/
+.claude/
+.DS_Store
+*.log

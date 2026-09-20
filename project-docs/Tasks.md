@@ -1,0 +1,129 @@
+TASKS: AI TUTOR GUIDE
+
+Status of work as of 2026-09-20.
+Legend: ✅ done · 🟡 partial · ⬜ not started
+Priority: P0 now, P1 next, P2 later
+Related: [PRD](PRD.md) · [Architecture](Architecture.md) · [Rules](Rules.md) · [Design](Design.md) · [Memory](../docs/Memory.md)
+
+---
+
+1. IMMEDIATE (P0)
+
+| # | Task | Status | Notes |
+|---|---|---|---|
+| P0-1 | Rotate the LangSmith API key | ⬜ | It once sat in .env.example, a shareable file. Create a new key, put it only in .env, delete the old one |
+| P0-2 | Run the full-app audit at localhost:5173 | ⬜ | Cover upload, document switching and delete, chat and quick actions, follow-ups, unsupported and injection questions, quiz flow, dashboard, planner, evaluation, mobile, keyboard, console and network errors. Use a throwaway session and delete it afterwards. Report findings as Frontend, Working, and Backend |
+| P0-3 | Verify markdown rendering in the browser | ⬜ | Paste the sample summary with bold, bullets, and nested bullets and confirm no literal ** or * remains |
+| P0-4 | Finish the clean LangSmith experiments | 🟡 | v2 baseline done (tutor-eval-v2-baseline_rag-ed255f28, 10 runs, 0 errors). v2 agentic was never created. Run: python evaluate.py --dataset data/golden_dataset_chem.json --session <session_id> --document chem.pdf --arm agentic --judge --langsmith-only --pause 10 --retries 3 --backoff 25 --prefix tutor-eval-v2 (about 25 minutes at 15 requests per minute) |
+| P0-5 | Add the LangSmith experiment results to 09-evaluation.md | ⬜ | Only use numbers from the clean v2 pair |
+
+---
+
+2. PRODUCT AND QUALITY (P1)
+
+| # | Task | Status | Notes |
+|---|---|---|---|
+| P1-1 | Tune the Evidence Evaluator to reduce over-refusal | ⬜ | Measured 1/10 false refusals (the milk question, coverage stuck at 0.2). Ideas: accept passages that state the answer at the level asked, add few-shot examples, ease answer_not_supported, then re-measure |
+| P1-2 | Bigger, human-reviewed golden set (50 or more questions, 3 or more documents) | ⬜ | Use build_golden, then a person reviews (review_status needs_human_review) |
+| P1-3 | Independent, stronger LLM judge | ⬜ | The current judge is the same model family and scores near the ceiling |
+| P1-4 | Re-index chem.pdf to get page numbers and regenerate the golden set with source_page | ⬜ | The legacy index has no pages |
+| P1-5 | Latency work: skip the critic when evidence coverage is high and the draft cites correctly | ⬜ | Measure quality impact first |
+| P1-6 | Consider a paid Gemini tier or a request queue | ⬜ | The free tier of 15 requests per minute drives latency and evaluation time |
+| P1-7 | Move quiz progress into SQLite | ⬜ | Keep backend/domain/quiz_engine.py rules, migrate storage only, add a migration for legacy JSON |
+| P1-8 | Decide whether the Study Planner stays a page | ⬜ | Alternative: fold it into the Dashboard as a Next Steps section |
+
+---
+
+3. FRONTEND (P1 to P2)
+
+| # | Task | Status | Notes |
+|---|---|---|---|
+| F-1 | Restore chat from GET /chat/history on load | ⬜ | The UI keeps its own localStorage cache today |
+| F-2 | Show the agent trace (decisions, tool calls, budget) in a collapsible panel | ⬜ | agent_trace is already returned by /agent |
+| F-3 | Benchmark: show baseline vs agentic comparison and "Not evaluated yet" | ⬜ | /evaluation already returns arms and comparison |
+| F-4 | Show a Refused badge for abstained benchmark rows | ⬜ | The cells are blank today |
+| F-5 | Show page numbers on source pills for new uploads | ⬜ | Chunk pages are in stored sources |
+| F-6 | Frontend tests (components and the quiz parser) | ⬜ | None yet |
+| F-7 | Evaluation trend view (accuracy over time, answers with explanations) | ⬜ | Needs the per-answer history exposed by the backend |
+
+---
+
+4. SECURITY AND OPERATIONS (P1 to P2)
+
+| # | Task | Status | Notes |
+|---|---|---|---|
+| S-1 | Real authentication (accounts) and per-user authorisation | ⬜ | The session id is the credential today |
+| S-2 | Rate limiting and lockout, including wrong benchmark password attempts | ⬜ | Also protect /agent and /upload |
+| S-3 | CORS origins from the environment | ⬜ | Hard-coded localhost:5173 today |
+| S-4 | Postgres option for chat and learner data, plus a deployment guide | ⬜ | Chroma files and SQLite are single-node |
+| S-5 | Clean up old LangSmith experiments from aborted runs | ⬜ | tutor-eval-*-729dd1ac, -0142f1ec, -c4b4cc46, -87896683, -20673c2b contain errored or partial runs |
+| S-6 | Health and readiness endpoint reporting model and database status | ⬜ | |
+
+---
+
+5. CODE HEALTH (P2)
+
+| # | Task | Status | Notes |
+|---|---|---|---|
+| C-2 | Decouple agents.retrieval from quiz_service.normalize | ⬜ | Move text utilities to a shared module |
+| C-3 | Give the Guide Agent real decisions or rename it to a service | ⬜ | Mostly a validated pipeline today |
+| C-4 | Add type checking and linting to CI | ⬜ | |
+| C-5 | Add a CI job for offline tests and a docs link check | ⬜ | |
+
+---
+
+6. COMPLETED ✅
+
+Frontend
+
+* ✅ React, Vite, and Tailwind app on the Playful Geometric design system (5 pages, shell, components, empty states, accessibility, reduced motion)
+* ✅ Evaluation page reworked to learner risk analysis, and no longer repeats Dashboard numbers
+* ✅ Dashboard trimmed to raw numbers (Weak and Strong topic chips removed) and retitled "Welcome Aboard to Your Learning Forum"
+* ✅ Page headings removed from Study Planner and Evaluation, and the sidebar footer line removed
+* ✅ Markdown rendering in chat and the study plan summary (bold, italic, nested lists) with react-markdown, no raw HTML
+* ✅ System Benchmark unlocked by a server-checked password
+* ✅ Eyebrow labels, circles, and triangles removed. Streamlit UI removed
+
+Backend architecture
+
+* ✅ Audit and redesign into backend/ (api, agents, tools, graph, services, guardrails, evaluation, observability), with the app.py shim
+* ✅ Supervisor, Retrieval Agent and Evidence Evaluator, Tutor, Critic, Quiz Agent, Study Planner Agent, Guide Agent
+* ✅ LangGraph workflow with bounded loops and a per-request Budget (12, 6, 3, 2, 45 s)
+* ✅ Typed, allow-listed, traced tool layer with isolation in one place
+* ✅ Guardrails: identity, input, evidence, output, quiz, planner
+* ✅ Chat history in SQLite with a recent window and a rolling summary
+* ✅ Learner state per session and document. Legacy files still read
+* ✅ Quiz: no answer leak, duplicate and difficulty checks, quote grounding, reload-safe
+* ✅ Page-aware PDF ingestion for new uploads
+* ✅ Planner makes no LLM call when no topic has 2 answers
+* ✅ GET /evaluation protected by BENCHMARK_PASSWORD
+
+Observability and evaluation
+
+* ✅ LangSmith: named runs, tags, metadata, hashed session id, real token counts when provided
+* ✅ Verified golden-set builder and the chem.pdf set (10 of 10 verified, 4/3/3 difficulty)
+* ✅ Baseline vs agentic evaluation with LLM-judge metrics, errored rows excluded, retries, report schema v2
+* ✅ LangSmith dataset upload and experiment runner
+* ✅ Live smoke tests (found and fixed follow-up misrouting)
+
+Quality, docs, hygiene
+
+* ✅ Folder tidy-up: runtime data in data/, quiz and plan rules in backend/domain/, project documents in project-docs/, run scripts in scripts/, root guardrails.py shim removed
+* ✅ 213 offline tests
+* ✅ Plain-language docs (docs/01 to 12), README, and this document set, all rewritten in a plain readable format
+* ✅ .env.example restored to placeholders, key moved to .env, .gitignore extended
+* ✅ Cleanup of leftovers (old chat JSONs, stray logs, old sample project, old docx, old golden set)
+
+---
+
+7. KNOWN ISSUES
+
+| Issue | Impact | Plan |
+|---|---|---|
+| Agentic over-refusal on debatable questions (1/10) | Occasional "couldn't find..." for answerable questions | P1-1 |
+| Free-tier rate limit | Slow answers and long evaluations | P1-6. Pacing and backoff already in place |
+| Old LangSmith experiments contain errored runs scored as zeros | Misleading if compared | Ignore, S-5, use the clean v2 pair |
+| Legacy chem.pdf index has no page numbers | Sources show chunk ids only | P1-4 |
+| No authentication | The session id is the credential | S-1 |
+| Benchmark password has no lockout | Guessable if exposed | S-2 |
+| Benchmark password is short | Easy to guess | Use a longer one before any deployment |
