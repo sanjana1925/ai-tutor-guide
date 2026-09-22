@@ -17,7 +17,7 @@
 ### 🏗️ Architecture
 
 <p align="center">
-  <img src="project-doc/ai-tutor.png" alt="AI Tutor Guide Architecture" width="850">
+  <img src="project-docs/ai-tutor.png" alt="AI Tutor Guide Architecture" width="850">
 </p>
 
 ### 🛡️ Guardrails
